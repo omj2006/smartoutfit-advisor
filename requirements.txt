@@ -1,0 +1,32 @@
+# Backend core dependencies
+fastapi>=0.104.0
+uvicorn>=0.24.0
+websockets>=12.0
+pydantic>=2.5.0
+pydantic-settings>=2.1.0
+openai>=1.6.0
+anthropic>=0.39.0
+httpx>=0.25.0
+pyyaml>=6.0.1
+python-dotenv>=1.0.0
+aiofiles>=23.2.1
+jinja2>=3.1.2
+
+# AI/LLM dependencies (minimized for Render free tier)
+dashscope>=1.20.0
+volcengine-python-sdk>=1.0.0
+langgraph>=0.0.30
+langchain-core>=0.1.0
+langchain-openai>=0.0.5
+
+# Data processing
+Pillow>=10.0.0
+scikit-learn>=1.3.0
+numpy>=1.24.0
+pandas>=2.0.0
+
+# Retry logic
+tenacity>=8.2.0
+
+# Optional (commented out to save memory on Render free tier)
+# streamlit>=1.30.0

@@ -1,0 +1,138 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 40 30% 96%;
+    --foreground: 264 20% 20%;
+    --card: 0 0% 100%;
+    --card-foreground: 264 20% 20%;
+    --primary: 330 50% 75%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 270 25% 75%;
+    --secondary-foreground: 264 20% 20%;
+    --muted: 270 10% 92%;
+    --muted-foreground: 270 15% 55%;
+    --accent: 330 50% 75%;
+    --accent-foreground: 264 20% 20%;
+    --border: 270 15% 85%;
+    --input: 270 15% 90%;
+    --ring: 330 50% 75%;
+
+    --bg-primary: #F7F5F2;
+    --bg-card: rgba(255, 255, 255, 0.7);
+    --bg-glass: rgba(255, 255, 255, 0.4);
+    --text-primary: #2D2640;
+    --text-secondary: #9B8EA8;
+    --accent-rose: #E8A0BF;
+    --accent-lavender: #C3ACD0;
+    --accent-gold: #D4A574;
+    --border-color: rgba(155, 142, 168, 0.2);
+  }
+
+  .dark {
+    --background: 264 30% 10%;
+    --foreground: 270 20% 92%;
+    --card: 264 25% 15%;
+    --card-foreground: 270 20% 92%;
+    --primary: 330 30% 45%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 270 20% 40%;
+    --secondary-foreground: 270 20% 92%;
+    --muted: 264 20% 20%;
+    --muted-foreground: 270 15% 55%;
+    --accent: 330 30% 45%;
+    --accent-foreground: 0 0% 100%;
+    --border: 270 15% 25%;
+    --input: 270 15% 20%;
+    --ring: 330 30% 45%;
+
+    --bg-primary: #1A1625;
+    --bg-card: rgba(40, 35, 55, 0.7);
+    --bg-glass: rgba(40, 35, 55, 0.4);
+    --text-primary: #F0EBF5;
+    --text-secondary: #8B7FA0;
+    --accent-rose: #8B5E83;
+    --accent-lavender: #6B5B8A;
+    --accent-gold: #B8935E;
+    --border-color: rgba(107, 91, 138, 0.3);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  ::selection {
+    background-color: rgba(232, 160, 191, 0.3);
+  }
+
+  .dark ::selection {
+    background-color: rgba(139, 94, 131, 0.4);
+  }
+}
+
+@layer components {
+  .glass {
+    background: var(--bg-glass);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--border-color);
+  }
+
+  .glass-card {
+    background: var(--bg-card);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--border-color);
+  }
+
+  .gradient-text {
+    background: linear-gradient(135deg, var(--accent-rose), var(--accent-lavender));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .gradient-border {
+    position: relative;
+    border-radius: 1.5rem;
+  }
+
+  .gradient-border::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(135deg, var(--accent-rose), var(--accent-lavender));
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}

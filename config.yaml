@@ -1,0 +1,83 @@
+llm:
+  default_provider: deepseek
+  providers:
+    openai:
+      model: gpt-4o
+      api_key: ${OPENAI_API_KEY}
+      base_url: https://api.openai.com/v1
+      temperature: 0.7
+      max_tokens: 4096
+    anthropic:
+      model: claude-sonnet-4-20250514
+      api_key: ${ANTHROPIC_API_KEY}
+      temperature: 0.7
+      max_tokens: 4096
+    deepseek:
+      model: deepseek-chat
+      api_key: ${DEEPSEEK_API_KEY}
+      base_url: https://api.deepseek.com/v1
+      temperature: 0.7
+      max_tokens: 4096
+
+agent:
+  max_iterations: 10
+  system_prompt: |
+    你是一个专业的智能穿搭助手，名叫"穿搭顾问"。你的核心能力是根据天气和场合为用户推荐合适的穿搭方案，并从商品库中搜索匹配单品。
+
+    你的工作流程：
+    1. 当用户询问穿搭建议时，首先使用 weather_query 工具查询用户所在城市的天气
+    2. 然后使用 knowledge_base 工具检索相关的穿搭知识
+    3. 使用 product_search 工具从商品库中搜索匹配的单品推荐给用户
+    4. 如果用户提供了明确的场合和城市，优先使用 outfit_advisor 工具获取综合推荐（包含天气+知识+商品+效果图）
+    5. 结合天气数据、穿搭知识库、商品推荐和你的时尚理解，给出个性化、实用的穿搭建议
+
+    对话规则（非常重要）：
+    - 仔细阅读对话历史，用户已经提供过的信息（城市、场合、风格等）不要重复询问
+    - 如果用户已经说了城市，直接查询天气并推荐穿搭，不要再问"你在哪个城市"
+    - 如果用户已经说了场合，直接按该场合推荐，不要再问"什么场合"
+    - 只有在用户确实没有提供必要信息时才追问，且只问缺失的信息
+    - 推荐穿搭后，如果用户追问或调整需求，基于已有上下文直接调整，不要重新收集所有信息
+
+    回答格式规则（非常重要）：
+    - 直接给出穿搭推荐结果，不要在回复中重复天气数据（温度、湿度、风力等原始数据）
+    - 不要在回复中重复工具返回的原始知识库内容
+    - 把工具返回的信息内化为你的专业建议，用自然流畅的语言表达
+    - 回复结构示例：
+      1. 一句话总结推荐（如"为你推荐一套优雅通勤穿搭"）
+      2. 具体搭配方案（上装、下装、鞋子、配饰，附商品名称、品牌、价格）
+      3. 搭配亮点/小贴士（1-2句）
+    - 语气亲切友好，像朋友一样给建议
+    - 当工具返回了穿搭效果图链接（[IMAGE_URL]标签），务必在回复中原样保留该标签，让用户可以看到图片
+
+server:
+  host: 0.0.0.0
+  port: 8000
+
+tools:
+  builtin:
+    - calculator
+    - web_search
+    - code_runner
+    - file_ops
+    - weather_query
+    - knowledge_base
+    - outfit_advisor
+    - product_search
+    - image_generator
+    - trend_analyzer
+    - ecommerce_search
+    - product_sync
+
+image_generation:
+  default_backend: pollinations
+  backends:
+    wanx:
+      api_key: ${DASHSCOPE_API_KEY}
+      model: wanx-v1
+    doubao:
+      access_key: ${VOLC_ACCESSKEY}
+      secret_key: ${VOLC_SECRETKEY}
+    sd:
+      api_url: http://127.0.0.1:7860
+    pollinations:
+      enabled: true
