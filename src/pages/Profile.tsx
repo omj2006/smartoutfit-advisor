@@ -30,6 +30,9 @@ import {
 } from 'lucide-react'
 import { useUserStore } from '@/store/useUserStore'
 import { useThemeStore } from '@/store/useThemeStore'
+import { Loading } from '@/components/Loading'
+import { ErrorDisplay, EmptyState } from '@/components/ErrorBoundary'
+import { ProfileSkeleton } from '@/components/Skeleton'
 
 // 标签页类型
 type TabType = 'profile' | 'collections' | 'history' | 'settings'
@@ -75,6 +78,10 @@ export default function Profile() {
   const [activeTab, setActiveTab] = useState<TabType>('profile')
   // 编辑模式
   const [isEditing, setIsEditing] = useState(false)
+  // 加载状态
+  const [isLoading, setIsLoading] = useState(false)
+  // 错误状态
+  const [error, setError] = useState<string | null>(null)
   // 编辑表单
   const [editForm, setEditForm] = useState({
     height: '',
@@ -82,6 +89,15 @@ export default function Profile() {
     gender: '',
     age: '',
   })
+
+  // 模拟加载效果
+  useEffect(() => {
+    setIsLoading(true)
+    const timer = setTimeout(() => {
+      setIsLoading(false)
+    }, 500)
+    return () => clearTimeout(timer)
+  }, [activeTab])
 
   // 加载个人信息到编辑表单
   useEffect(() => {
@@ -94,8 +110,14 @@ export default function Profile() {
   }, [])
 
   const handleLogout = () => {
-    logout()
-    navigate('/login')
+    setIsLoading(true)
+    try {
+      logout()
+      navigate('/login')
+    } catch (err) {
+      setError('退出登录失败')
+      setIsLoading(false)
+    }
   }
 
   const handleSaveProfile = () => {
@@ -140,6 +162,28 @@ export default function Profile() {
     { id: 'history', label: '历史', icon: History, badge: historyRecords.length },
     { id: 'settings', label: '设置', icon: Settings },
   ]
+
+  // 显示加载状态
+  if (isLoading) {
+    return (
+      <div className="min-h-screen p-4 md:p-6 lg:p-8">
+        <ProfileSkeleton />
+      </div>
+    )
+  }
+
+  // 显示错误状态
+  if (error) {
+    return (
+      <div className="min-h-screen p-4 md:p-6 lg:p-8">
+        <ErrorDisplay 
+          error={error} 
+          onRetry={() => setError(null)} 
+          showHome={false}
+        />
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen p-4 md:p-6 lg:p-8 space-y-6">
@@ -505,10 +549,11 @@ export default function Profile() {
           className="space-y-4"
         >
           {savedOutfits.length === 0 ? (
-            <div className="glass-card rounded-2xl p-8 text-center">
-              <Heart className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-              <p className="text-muted-foreground">还没有收藏的穿搭方案</p>
-            </div>
+            <EmptyState 
+              icon={<Heart className="w-8 h-8 text-pink-500" />}
+              title="暂无收藏"
+              description="快去收藏喜欢的穿搭方案吧"
+            />
           ) : (
             <div className="grid gap-4 md:grid-cols-2">
               {savedOutfits.map((outfit) => (
@@ -556,10 +601,11 @@ export default function Profile() {
           className="space-y-4"
         >
           {historyRecords.length === 0 ? (
-            <div className="glass-card rounded-2xl p-8 text-center">
-              <History className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-              <p className="text-muted-foreground">还没有历史记录</p>
-            </div>
+            <EmptyState 
+              icon={<History className="w-8 h-8 text-blue-500" />}
+              title="暂无历史记录"
+              description="开始探索穿搭推荐吧"
+            />
           ) : (
             <>
               <div className="flex justify-end">

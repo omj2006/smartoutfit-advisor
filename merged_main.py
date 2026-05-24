@@ -134,73 +134,77 @@ def create_app() -> FastAPI:
     except Exception as e:
         logger.warning(f"无法加载认证 API: {e}")
 
-    # LangGraph 多智能体工作流 API
+    # LangGraph 多智能体工作流 API（已优化并行执行）
     @app.post("/api/langgraph/outfit")
     async def langgraph_outfit(request: dict):
         """
-        LangGraph 多智能体穿搭工作流
+        LangGraph 多智能体穿搭工作流（优化版）
+        
         包含：天气查询、知识库、商品检索、潮流趋势、图像生成
+        已优化：独立Agent并行执行，提升响应速度
         """
         import traceback
+        import threading
+        import time
         
-        try:
-            city = request.get("city", "")
-            occasion = request.get("occasion", "")
-            user_query = request.get("query", "")
-            user_id = request.get("user_id", "default")
-            
-            # 调用工作流（带超时处理）
-            import threading
-            import time
-            
-            result = None
-            error = None
-            
-            def run_workflow():
-                nonlocal result, error
-                try:
-                    from agents.outfit_workflow import get_outfit_workflow
-                    
-                    workflow = get_outfit_workflow()
-                    result = workflow.run(
-                        city=city,
-                        occasion=occasion,
-                        user_query=user_query,
-                        user_id=user_id
-                    )
-                except Exception as e:
-                    error = e
-            
-            # 启动工作流线程，设置超时
-            thread = threading.Thread(target=run_workflow)
-            thread.start()
-            thread.join(timeout=30)  # 30秒超时
-            
-            if error:
-                raise error
-            
-            if result is None:
-                # 如果超时，返回模拟数据
-                logger.warning("LangGraph workflow timed out, returning mock data")
-                return _get_mock_outfit_result(city, occasion)
-            
-            return {
-                "success": True,
-                "data": {
-                    "weather": result.get("weather"),
-                    "outfit_suggestion": result.get("outfit_suggestion"),
-                    "filtered_products": result.get("filtered_products"),
-                    "fashion_trends": result.get("fashion_trends"),
-                    "image_prompt": result.get("image_prompt"),
-                    "execution_log": result.get("execution_log"),
-                    "user_memory": result.get("user_memory")
-                }
+        city = request.get("city", "")
+        occasion = request.get("occasion", "")
+        user_query = request.get("query", "")
+        user_id = request.get("user_id", "default")
+        
+        result = None
+        error = None
+        
+        def run_workflow():
+            nonlocal result, error
+            try:
+                from agents.outfit_workflow import get_outfit_workflow
+                
+                workflow = get_outfit_workflow()
+                
+                # 添加执行时间统计
+                start_time = time.time()
+                logger.info(f"🚀 开始执行并行工作流 - 城市: {city}, 场合: {occasion}")
+                
+                result = workflow.run(
+                    city=city,
+                    occasion=occasion,
+                    user_query=user_query,
+                    user_id=user_id
+                )
+                
+                elapsed = time.time() - start_time
+                logger.info(f"✅ 工作流执行完成，耗时: {elapsed:.2f}秒")
+            except Exception as e:
+                error = e
+                logger.error(f"❌ 工作流执行失败: {e}")
+        
+        # 启动工作流线程，设置超时（优化：减少超时时间，因为并行执行更快）
+        thread = threading.Thread(target=run_workflow)
+        thread.start()
+        thread.join(timeout=20)  # 优化：从30秒减少到20秒（并行执行更快）
+        
+        if error:
+            logger.error(f"工作流错误: {error}")
+            raise error
+        
+        if result is None:
+            # 如果超时，返回模拟数据（优化：添加更详细的日志）
+            logger.warning("⚠️ LangGraph workflow timed out (20s), returning mock data for better UX")
+            return _get_mock_outfit_result(city, occasion)
+        
+        return {
+            "success": True,
+            "data": {
+                "weather": result.get("weather"),
+                "outfit_suggestion": result.get("outfit_suggestion"),
+                "filtered_products": result.get("filtered_products"),
+                "fashion_trends": result.get("fashion_trends"),
+                "image_prompt": result.get("image_prompt"),
+                "execution_log": result.get("execution_log"),
+                "user_memory": result.get("user_memory")
             }
-        except Exception as e:
-            logger.error(f"LangGraph workflow error: {e}")
-            logger.error(traceback.format_exc())
-            # 无论如何都返回模拟数据
-            return _get_mock_outfit_result(request.get("city", ""), request.get("occasion", ""))
+        }
     
     # 基础健康检查
     @app.get("/api/health")

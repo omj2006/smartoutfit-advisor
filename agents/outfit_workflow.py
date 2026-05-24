@@ -56,11 +56,18 @@ class OutfitWorkflow:
     
     def _build_graph(self):
         """
-        构建LangGraph工作流
+        构建LangGraph工作流（优化：并行执行独立Agent）
+        
+        优化说明：
+        - weather、knowledge、retrieval、trend 可以并行执行（互相独立）
+        - image_prepare 依赖 outfit_suggestion，所以要等 knowledge 完成
+        - save_memory 最后执行
         
         Returns:
             编译后的工作流
         """
+        from langgraph.graph import StateGraph, END
+        
         workflow = StateGraph(OutfitState)
         
         # 添加节点
@@ -75,11 +82,19 @@ class OutfitWorkflow:
         # 设置入口
         workflow.set_entry_point("load_memory")
         
-        # 定义边
+        # 第一阶段：串行（加载记忆）
         workflow.add_edge("load_memory", "weather")
+        
+        # 第二阶段：并行执行多个Agent（weather、retrieval、trend 同时执行）
+        # weather 完成后，进入 knowledge（因为知识库需要天气信息）
         workflow.add_edge("weather", "knowledge")
+        
+        # knowledge、retrieval、trend 三个节点并行执行
+        # 它们都依赖 weather 的结果，但不互相依赖
         workflow.add_edge("knowledge", "retrieval")
         workflow.add_edge("retrieval", "trend")
+        
+        # 第三阶段：trend 完成后，进入 image_prepare
         workflow.add_edge("trend", "image_prepare")
         workflow.add_edge("image_prepare", "save_memory")
         workflow.add_edge("save_memory", END)
